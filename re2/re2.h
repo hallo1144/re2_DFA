@@ -220,6 +220,9 @@
 namespace re2 {
 class Prog;
 class Regexp;
+class DFA;
+int regexStateNum(const char* regex);
+DFA* transferDFA(const char* regex);
 }  // namespace re2
 
 namespace re2 {
@@ -575,7 +578,6 @@ class RE2 {
              Anchor re_anchor,
              StringPiece* submatch,
              int nsubmatch) const;
-  Prog* getProg() { return prog_; }
 
   // Check that the given rewrite string is suitable for use with this
   // regular expression.  It checks that:
@@ -758,6 +760,8 @@ class RE2 {
   static void FUZZING_ONLY_set_maximum_global_replace_count(int i);
 
  private:
+  friend int regexStateNum(const char* regex, bool debug);
+
   void Init(const StringPiece& pattern, const Options& options);
 
   bool DoMatch(const StringPiece& text,

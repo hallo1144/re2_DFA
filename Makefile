@@ -139,6 +139,7 @@ OFILES=\
 	obj/re2/tostring.o\
 	obj/re2/unicode_casefold.o\
 	obj/re2/unicode_groups.o\
+	obj/re2/DfaWrapper.o\
 
 TESTOFILES=\
 	obj/util/pcre.o\
@@ -187,7 +188,7 @@ DBIGTESTS=$(patsubst obj/%,obj/dbg/%,$(BIGTESTS))
 .PRECIOUS: obj/%.o
 obj/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
-	$(CXX) -c -o $@ $(CPPFLAGS) $(RE2_CXXFLAGS) $(CXXFLAGS) -DNDEBUG $*.cc
+	$(CXX) -c -o $@ -fPIC $(CPPFLAGS) $(RE2_CXXFLAGS) $(CXXFLAGS) -DNDEBUG $*.cc
 
 .PRECIOUS: obj/dbg/%.o
 obj/dbg/%.o: %.cc $(HFILES)
@@ -269,9 +270,28 @@ testofiles: $(TESTOFILES)
 
 .PHONY: test
 test: $(DTESTS) $(TESTS) $(STESTS) debug-test static-test shared-test
+
+.PHONY: mytest
+mytest: $(DTESTS) $(TESTS) $(STESTS)
 	g++ -c -o obj/util/mytest.o  -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I.   -O3 -g -DNDEBUG util/mytest.cc
 	g++ -o ./mytest obj/util/mytest.o -Lobj/so -lre2 obj/libre2.a -pthread
 	LD_LIBRARY_PATH=./obj/so ./mytest
+
+.PHONY: py
+py: all
+	$(MAKE) -C py_module/ all
+
+.PHONY: pyinstall
+pyinstall:
+	$(MAKE) -C py_module/ install
+
+.PHONY: pyremove
+pyremove:
+	$(MAKE) -C py_module/ remove
+
+.PHONY: pyclean
+pyclean:
+	$(MAKE) -C py_module/ clean
 
 .PHONY: debug-test
 debug-test: $(DTESTS)
