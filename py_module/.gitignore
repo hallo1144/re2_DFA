@@ -1,0 +1,6 @@
+myre2*
+_myre2*
+__pycache__/
+build/
+dist/
+!myre2.i

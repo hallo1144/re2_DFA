@@ -3,13 +3,15 @@ all:
 	python3 setup.py build_ext --inplace
 
 .PHONY: install
-install:
-	python setup.py bdist_wheel
+install: myre2.py
+	pip3 install .
+
+.PHONY: uninstall
+uninstall:
+	pip3 uninstall myre2 -y
 
 .PHONY: remove
-remove:
-	# python3 setup.py build_ext --inplace
-	echo "pyremove"
+remove: uninstall
 
 .PHONY: clean
 clean:

@@ -5,8 +5,3 @@ obj/
 build/
 benchlog.*
 mytest
-py_module/*.so
-py_module/*_wrap.*
-*/__pycache__/
-py_module/build/
-py_module/dist/

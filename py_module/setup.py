@@ -1,8 +1,10 @@
 # setup.py
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 setup(name='myre2',
       version="0.1",
+      description="google-re2 wrapper for DFA graph",
+      py_modules=["myre2"],
       ext_modules=[
         Extension('_myre2',
                   ['myre2.i'],
