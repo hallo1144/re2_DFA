@@ -1,19 +1,17 @@
 /* File : example.i */
 %module myre2
+%include "std_vector.i"
+
 %{
     /* Put headers and other declarations here */
-    #include "re2/DfaWrapper.cc"
+    #include "re2/DfaWrapper.h"
+    #include <vector>
     using namespace re2;
+    #define SWIG_PYTHON_STRICT_BYTE_CHAR
 %}
 
-// %import "re2/DfaWrapper.cc"
+namespace std {
+    %template(PStateVector) vector<re2::PState*>;
+}
 
-
-
-// class DfaWrapper {
-//     public:
-//         static int regexStateNum(const char* regex) { return regexStateNum(regex); }
-//         // static DFA*
-// };
-
-extern int regexStateNum(const char* regex, bool debug);
+%include "../re2/DfaWrapper.h"

@@ -1,15 +1,20 @@
-#include "re2/prog.h"
 #include "re2/re2.h"
-#include "re2/stringpiece.h"
+#include "re2/prog.h"
 
 namespace re2 {
-    class DFA;
-}
+    class PState {
+        public:
+        bool match;
+        int index;
+        int next[256];
 
-namespace re2 {
+        PState(bool is_match, int idx): match(is_match), index(idx) {}
+    };
+
     class DfaWrapper {
         public:
-            static int regexStateNum(const char* regex);
-            static DFA* transferDFA(const char* regex);
+        static int regexStateNum(const char* regex, bool debug);
+        static std::vector<PState*>* getRegexDfa(const char* regex);
     };
+
 }

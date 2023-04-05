@@ -45,6 +45,7 @@
 #include "re2/re2.h"
 #include "re2/sparse_set.h"
 #include "re2/stringpiece.h"
+#include "re2/DfaWrapper.h"
 
 // Silence "zero-sized array in struct/union" warning for DFA::State::next_.
 #ifdef _MSC_VER
@@ -97,6 +98,7 @@ class DFA {
   // Returns the number of states built.
   // FOR TESTING OR EXPERIMENTAL PURPOSES ONLY.
   int BuildAllStates(const Prog::DFAStateCallback& cb);
+  std::vector<PState*>* getDFAStates();
 
   // Computes min and max for matching strings.  Won't return strings
   // bigger than maxlen.
@@ -171,6 +173,8 @@ class DFA {
   typedef std::unordered_set<State*, StateHash, StateEqual> StateSet;
 
  private:
+  friend class DfaWrapper;
+
   // Make it easier to swap in a scalable reader-writer mutex.
   using CacheMutex = Mutex;
 
@@ -1965,6 +1969,96 @@ int DFA::BuildAllStates(const Prog::DFAStateCallback& cb) {
   return static_cast<int>(m.size());
 }
 
+// Build out all states in DFA.  Returns vetcor of states.
+std::vector<PState*>* DFA::getDFAStates() {
+  if (!ok())
+    return 0;
+
+  // Pick out start state for unanchored search
+  // at beginning of text.
+  RWLocker l(&cache_mutex_);
+  SearchParams params(StringPiece(), StringPiece(), &l);
+  params.anchored = false;
+  if (!AnalyzeSearch(&params) ||
+      params.start == NULL ||
+      params.start == DeadState)
+    return 0;
+
+  // Add start state to work queue.
+  // Note that any State* that we handle here must point into the cache,
+  // so we can simply depend on pointer-as-a-number hashing and equality.
+  std::unordered_map<State*, int> m;
+  std::deque<State*> q;
+  m.emplace(params.start, static_cast<int>(m.size()));
+  q.push_back(params.start);
+
+  // Compute the input bytes needed to cover all of the next pointers.
+  int nnext = prog_->bytemap_range() + 1;  // + 1 for kByteEndText slot
+  std::vector<int> input(nnext);
+  for (int c = 0; c < 256; c++) {
+    int b = prog_->bytemap()[c];
+    while (c < 256-1 && prog_->bytemap()[c+1] == b)
+      c++;
+    input[b] = c;
+  }
+  input[prog_->bytemap_range()] = kByteEndText;
+
+  // Scratch space for the output.
+  std::vector<int> output(nnext);
+
+
+  std::vector<PState*>* states = new std::vector<PState*>;
+  // Flood to expand every state.
+  bool oom = false;
+  while (!q.empty()) {
+    State* s = q.front();
+    q.pop_front();
+    for (int c : input) {
+      State* ns = RunStateOnByteUnlocked(s, c);
+      if (ns == NULL) {
+        oom = true;
+        break;
+      }
+      if (ns == DeadState) {
+        output[ByteMap(c)] = -1;
+        continue;
+      }
+      if (m.find(ns) == m.end()) {
+        m.emplace(ns, static_cast<int>(m.size()));
+        q.push_back(ns);
+      }
+      output[ByteMap(c)] = m[ns];
+    }
+
+    bool is_match = (s == FullMatchState || s->IsMatch());
+    PState* tmp = new PState(is_match, m.find(s)->second);
+    for(int j = 0; j < 256; j++) {
+      tmp->next[j] = output[ByteMap(j)];
+    }
+    states->push_back(tmp);
+
+    if (oom)
+      break;
+  }
+
+  // build PState array
+  // for(unsigned int i = 0; i < m.size(); i++) {
+  //   printf("state (%d-%d):\n", i, m.size());
+  //   bool is_match = (m_inv[i] == FullMatchState || m_inv[i]->IsMatch());
+  //   PState* tmp = new PState(is_match, i);
+  //   for(int j = 0; j < 256; j++) {
+      
+  //     tmp->next[j] = m.find(m_inv[i]->next_[j])->second;
+  //     printf("%d ", tmp->next[j]);
+  //     if((j+1)%16 == 0) printf("\n");
+  //   }
+  //   states->push_back(tmp);
+  //   printf("\n\n");
+  // }
+
+  return states;
+}
+
 // Build out all states in DFA for kind.  Returns number of states.
 int Prog::BuildEntireDFA(MatchKind kind, const DFAStateCallback& cb) {
   return GetDFA(kind)->BuildAllStates(cb);
@@ -2113,6 +2207,16 @@ bool Prog::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   // Have to use dfa_longest_ to get all strings for full matches.
   // For example, (a|aa) never matches aa in first-match mode.
   return GetDFA(kLongestMatch)->PossibleMatchRange(min, max, maxlen);
+}
+
+std::vector<PState*>* DfaWrapper::getRegexDfa(const char* regex) {
+  printf("hello\n");
+  RE2 instance(regex);
+  Prog* p = instance.prog_;
+  DFA* dfa = p->GetDFA(re2::Prog::kFirstMatch);
+  std::vector<PState*>* dfa_map_python = dfa->getDFAStates();
+
+  return dfa_map_python;
 }
 
 }  // namespace re2

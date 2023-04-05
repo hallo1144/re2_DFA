@@ -51,8 +51,7 @@ enum EmptyOp {
 
 class DFA;
 class Regexp;
-int regexStateNum(const char* regex);
-DFA* transferDFA(const char* regex);
+class DfaWrapper;
 
 // Compiled form of regexp program.
 class Prog {
@@ -406,7 +405,7 @@ class Prog {
 
  private:
   friend class Compiler;
-  friend int regexStateNum(const char* regex, bool debug);
+  friend class DfaWrapper;
 
   DFA* GetDFA(MatchKind kind);
   void DeleteDFA(DFA* dfa);

@@ -221,8 +221,7 @@ namespace re2 {
 class Prog;
 class Regexp;
 class DFA;
-int regexStateNum(const char* regex);
-DFA* transferDFA(const char* regex);
+class DfaWrapper;
 }  // namespace re2
 
 namespace re2 {
@@ -760,7 +759,7 @@ class RE2 {
   static void FUZZING_ONLY_set_maximum_global_replace_count(int i);
 
  private:
-  friend int regexStateNum(const char* regex, bool debug);
+  friend class DfaWrapper;
 
   void Init(const StringPiece& pattern, const Options& options);
 

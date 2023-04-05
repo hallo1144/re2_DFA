@@ -1,9 +1,8 @@
-#include "re2/re2.h"
-#include "re2/prog.h"
+#include "re2/DfaWrapper.h"
 #include <cstdio>
 
 namespace re2 {
-    int regexStateNum(const char* regex, bool debug) {
+    int DfaWrapper::regexStateNum(const char* regex, bool debug) {
         RE2 instance(regex);
         Prog* p = instance.prog_;
         if (debug)
@@ -19,10 +18,4 @@ namespace re2 {
         });
         return num;
     }
-
-    // DFA* transferDFA(const char* regex) {
-    //     RE2 instance(regex);
-    //     Prog* p = instance.prog_;
-    //     return p->GetDFA(re2::Prog::kFirstMatch);
-    // }
 }

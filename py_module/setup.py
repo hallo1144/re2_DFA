@@ -2,7 +2,7 @@
 from setuptools import setup, Extension
 
 setup(name='myre2',
-      version="0.1",
+      version="0.2",
       description="google-re2 wrapper for DFA graph",
       py_modules=["myre2"],
       ext_modules=[
