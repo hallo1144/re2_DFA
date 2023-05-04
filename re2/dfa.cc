@@ -2210,7 +2210,6 @@ bool Prog::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
 }
 
 std::vector<PState*>* DfaWrapper::getRegexDfa(const char* regex) {
-  printf("hello\n");
   RE2 instance(regex);
   Prog* p = instance.prog_;
   DFA* dfa = p->GetDFA(re2::Prog::kFirstMatch);

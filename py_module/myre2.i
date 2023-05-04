@@ -12,6 +12,7 @@
 
 namespace std {
     %template(PStateVector) vector<re2::PState*>;
+    %template(IntVector) vector<int>;
 }
 
 %include "../re2/DfaWrapper.h"

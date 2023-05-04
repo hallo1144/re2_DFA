@@ -6,7 +6,7 @@ namespace re2 {
         public:
         bool match;
         int index;
-        int next[256];
+        std::vector<int> next = std::vector<int>(256);
 
         PState(bool is_match, int idx): match(is_match), index(idx) {}
     };
