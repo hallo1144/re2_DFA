@@ -6,7 +6,7 @@ namespace re2 {
         public:
         bool match;
         int index;
-        std::vector<int> next = std::vector<int>(256);
+        std::vector<int> next;
 
         PState(bool is_match, int idx): match(is_match), index(idx) {}
     };
@@ -14,7 +14,9 @@ namespace re2 {
     class DfaWrapper {
         public:
         static int regexStateNum(const char* regex, bool debug);
-        static std::vector<PState*>* getRegexDfa(const char* regex);
-    };
+        static DfaWrapper* getRegexDfa(const char* regex);
 
+        std::vector<PState*>* states;
+        std::vector<int> bytemap = std::vector<int>(256);
+    };
 }

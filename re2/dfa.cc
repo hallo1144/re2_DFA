@@ -2032,8 +2032,8 @@ std::vector<PState*>* DFA::getDFAStates() {
 
     bool is_match = (s == FullMatchState || s->IsMatch());
     PState* tmp = new PState(is_match, m.find(s)->second);
-    for(int j = 0; j < 256; j++) {
-      tmp->next[j] = output[ByteMap(j)];
+    for(unsigned int j = 0; j < output.size(); j++) {
+      tmp->next.push_back(output[j]);
     }
     states->push_back(tmp);
 
@@ -2209,13 +2209,18 @@ bool Prog::PossibleMatchRange(std::string* min, std::string* max, int maxlen) {
   return GetDFA(kLongestMatch)->PossibleMatchRange(min, max, maxlen);
 }
 
-std::vector<PState*>* DfaWrapper::getRegexDfa(const char* regex) {
+DfaWrapper* DfaWrapper::getRegexDfa(const char* regex) {
   RE2 instance(regex);
   Prog* p = instance.prog_;
   DFA* dfa = p->GetDFA(re2::Prog::kFirstMatch);
   std::vector<PState*>* dfa_map_python = dfa->getDFAStates();
+  DfaWrapper* w = new DfaWrapper;
+  w->states = dfa_map_python;
 
-  return dfa_map_python;
+  for(int i = 0; i < 256; i++) {
+    w->bytemap[i] = p->bytemap_[i];
+  }
+  return w;
 }
 
 }  // namespace re2
